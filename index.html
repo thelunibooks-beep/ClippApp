@@ -2,50 +2,48 @@
 <html lang="ca">
 <head>
     <meta charset="UTF-8">
-    <title>APPCLIP OCOM - V1.9</title>
+    <title>APPCLIP OCOM V2.0 - OCR Engine</title>
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script src="https://unpkg.com/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
     <style>
-        :root { --primary: #003366; --accent: #28a745; --bg: #f4f7f9; }
+        :root { --primary: #003366; --accent: #28a745; --bg: #f0f2f5; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); padding: 20px; }
-        .wrapper { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
-        .panel-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px; }
-        .panel { border: 1px solid #e1e4e8; padding: 20px; border-radius: 10px; background: #fff; }
-        #drop-zone { border: 2px dashed #cbd5e0; padding: 30px; text-align: center; border-radius: 10px; cursor: pointer; background: #f8fafc; }
-        .input-box { display: flex; gap: 10px; }
-        input[type="text"] { flex-grow: 1; padding: 12px; border: 1px solid #ced4da; border-radius: 6px; }
-        .item { display: flex; align-items: center; background: #fff; border: 1px solid #edf2f7; padding: 10px; margin-bottom: 8px; border-radius: 8px; gap: 10px; }
-        .tag { font-size: 9px; font-weight: bold; color: white; padding: 4px 6px; border-radius: 4px; min-width: 50px; text-align: center; text-transform: uppercase; }
-        .tag-digital { background: var(--accent); }
-        .tag-pdf { background: #3182ce; }
-        .editable-title { flex-grow: 1; border: none; background: transparent; font-size: 14px; color: #2d3748; }
-        .btn-final { background: var(--accent); color: white; width: 100%; height: 55px; font-size: 18px; font-weight: bold; border: none; border-radius: 10px; cursor: pointer; margin-top: 20px; }
-        #email-box { margin-top: 20px; padding: 15px; background: #2d3748; color: #edf2f7; border-radius: 8px; font-family: monospace; display: none; white-space: pre-wrap; font-size: 13px; }
+        .wrapper { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
+        .panel-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        .panel { border: 1px solid #ddd; padding: 20px; border-radius: 8px; background: #fff; }
+        #drop-zone { border: 2px dashed #003366; padding: 30px; text-align: center; border-radius: 8px; cursor: pointer; background: #f8f9fa; }
+        .loading { display: none; color: #003366; font-weight: bold; margin: 10px 0; text-align: center; }
+        .item { display: flex; align-items: center; background: #fff; border: 1px solid #eee; padding: 10px; margin-bottom: 8px; border-radius: 6px; gap: 10px; }
+        .editable-title { flex-grow: 1; border: none; font-size: 14px; color: #333; background: transparent; }
+        .tag { font-size: 10px; color: white; padding: 4px 8px; border-radius: 4px; min-width: 60px; text-align: center; }
+        .btn-final { background: var(--accent); color: white; width: 100%; height: 50px; font-size: 18px; border: none; border-radius: 8px; cursor: pointer; margin-top: 20px; }
+        #email-box { margin-top: 20px; padding: 15px; background: #333; color: #fff; border-radius: 8px; white-space: pre-wrap; display: none; font-family: monospace; }
     </style>
 </head>
 <body>
 
 <div class="wrapper">
-    <h2 style="color: var(--primary); text-align: center; margin-top: 0;">APPCLIP OCOM V1.9</h2>
-
+    <h2 style="color: var(--primary); text-align: center;">OCOM Clipping Engine V2.0</h2>
+    
     <div class="panel-container">
         <div class="panel">
             <h3>🌐 DIGITALS</h3>
-            <div class="input-box">
-                <input type="text" id="url-input" placeholder="Enganxa enllaç i Enter..." onkeypress="if(event.key==='Enter') afegirDigital()">
-            </div>
+            <input type="text" id="url-input" placeholder="URL + Enter" onkeypress="if(event.key==='Enter') afegirDigital()" style="width:90%; padding:10px;">
         </div>
         <div class="panel">
-            <h3>📰 PAPER (PDF)</h3>
+            <h3>📰 PREMSA PAPER</h3>
             <div id="drop-zone" onclick="document.getElementById('file-input').click()" ondragover="event.preventDefault()" ondrop="event.preventDefault(); handlePdfs(event.dataTransfer.files)">
-                📂 Arrossega el PDF aquí
+                Arrossega el PDF aquí
                 <input type="file" id="file-input" multiple accept="application/pdf" style="display:none" onchange="handlePdfs(this.files)">
             </div>
         </div>
     </div>
 
+    <div id="status" class="loading">⌛ Analitzant PDF amb OCR (això pot trigar uns segons)...</div>
     <div id="lista-unificada"></div>
-    <button class="btn-final" onclick="processarTot()">GENERAR CLIPPING FINAL</button>
+    
+    <button class="btn-final" onclick="processarTot()">GENERAR CLIPPING</button>
     <div id="email-box"></div>
 </div>
 
@@ -56,55 +54,48 @@
     function afegirDigital() {
         const input = document.getElementById('url-input');
         const url = input.value.trim();
-        if (!url) return;
-        let segments = url.split('/').filter(p => p.length > 0);
-        let tit = segments.pop().split('.')[0].replace(/-/g, ' ');
+        if(!url) return;
+        let tit = url.split('/').pop().split('.')[0].replace(/-/g, ' ');
         tit = tit.charAt(0).toUpperCase() + tit.slice(1);
-        mesa.push({ tipus: 'digital', titular: tit, link: url, fitxer: null });
+        mesa.push({ tipus: 'digital', titular: tit, link: url });
         input.value = "";
         renderMesa();
     }
 
     async function handlePdfs(files) {
+        document.getElementById('status').style.display = 'block';
         for (let f of files) {
-            const titulares = await extraerTitularesSimple(f);
-            titulares.forEach(t => {
-                mesa.push({ tipus: 'pdf', titular: t, link: '(Adjunt)', fitxer: f });
-            });
+            const titulares = await extraerConOCR(f);
+            titulares.forEach(t => mesa.push({ tipus: 'pdf', titular: t, link: '(Adjunt)', fitxer: f }));
         }
+        document.getElementById('status').style.display = 'none';
         renderMesa();
     }
 
-    async function extraerTitularesSimple(file) {
+    async function extraerConOCR(file) {
         try {
             const buffer = await file.arrayBuffer();
             const pdf = await pdfjsLib.getDocument({data: buffer}).promise;
             const page = await pdf.getPage(1);
-            const content = await page.getTextContent();
             
-            // Filtramos líneas que tengan cara de titular (más de 20 letras)
-            // y que no sean la web o la fecha estándar
-            const ignorar = ["www.", "2026", "1,90", "Número", "Fundado", "Pàgina"];
+            // Convertim la pàgina a imatge (canvas) per a l'OCR
+            const viewport = page.getViewport({scale: 2.0});
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            await page.render({canvasContext: context, viewport: viewport}).promise;
+
+            // Executem Tesseract OCR en Català/Castellà
+            const { data: { text } } = await Tesseract.recognize(canvas, 'cat+spa');
             
-            let frases = [];
-            let lineasRaw = {};
+            // Netegem el text i busquem línies que semblin titulars
+            const lineas = text.split('\n')
+                .map(l => l.trim())
+                .filter(l => l.length > 25 && !l.includes('www') && !l.includes('2026'));
 
-            content.items.forEach(i => {
-                const y = Math.round(i.transform[5]);
-                if (!lineasRaw[y]) lineasRaw[y] = [];
-                lineasRaw[y].push(i.str);
-            });
-
-            Object.keys(lineasRaw).sort((a,b) => b-a).forEach(y => {
-                let texto = lineasRaw[y].join(" ").trim();
-                const esRuido = ignorar.some(word => texto.includes(word));
-                if (texto.length > 20 && !esRuido) {
-                    frases.push(texto);
-                }
-            });
-
-            return frases.length > 0 ? frases : ["Fes clic aquí per escriure el titular"];
-        } catch (e) { return ["Error al llegir el PDF"]; }
+            return lineas.length > 0 ? lineas.slice(0, 5) : ["Titular no detectat: " + file.name];
+        } catch (e) { return ["Error en l'escaneig"]; }
     }
 
     function renderMesa() {
@@ -114,40 +105,38 @@
             const row = document.createElement('div');
             row.className = 'item';
             row.innerHTML = `
-                <span class="tag ${item.tipus === 'digital' ? 'tag-digital' : 'tag-pdf'}">${item.tipus}</span>
+                <span class="tag" style="background:${item.tipus==='digital'?'#28a745':'#007bff'}">${item.tipus}</span>
                 <input type="text" class="editable-title" value="${item.titular}" onchange="mesa[${idx}].titular = this.value">
-                <button onclick="mesa.splice(${idx},1); renderMesa()" style="border:none; background:none; cursor:pointer; color:red; font-weight:bold;">✕</button>
+                <button onclick="mesa.splice(${idx},1); renderMesa()" style="border:none; background:none; cursor:pointer; color:red;">✕</button>
             `;
             list.appendChild(row);
         });
     }
 
     async function processarTot() {
-        if (mesa.length === 0) return;
         const { PDFDocument } = PDFLib;
-        const finalPdf = await PDFDocument.create();
-        const firstPage = finalPdf.addPage([600, 800]);
-        firstPage.drawText('RECULL DE PREMSA OCOM', { x: 50, y: 720, size: 20 });
+        const out = await PDFDocument.create();
+        const p = out.addPage([600, 800]);
+        p.drawText('RECULL DE PREMSA OCOM', { x: 50, y: 720, size: 20 });
 
-        // Procesamos solo los archivos PDF únicos para no duplicar páginas
-        const archivosUnicos = [...new Set(mesa.filter(i => i.fitxer).map(i => i.fitxer))];
-        for (let f of archivosUnicos) {
+        const fitxersUnics = [...new Set(mesa.filter(i => i.fitxer).map(i => i.fitxer))];
+        for (let f of fitxersUnics) {
             const donor = await PDFDocument.load(await f.arrayBuffer());
-            const pages = await finalPdf.copyPages(donor, donor.getPageIndices());
-            pages.forEach(p => finalPdf.addPage(p));
+            const pages = await out.copyPages(donor, donor.getPageIndices());
+            pages.forEach(pg => out.addPage(pg));
         }
 
-        const pdfBytes = await finalPdf.save();
+        const bytes = await out.save();
+        const blob = new Blob([bytes], { type: 'application/pdf' });
         const link = document.createElement('a');
-        link.href = URL.createObjectURL(new Blob([pdfBytes], { type: 'application/pdf' }));
-        link.download = `Clipping_OCOM.pdf`;
+        link.href = URL.createObjectURL(blob);
+        link.download = "Clipping_OCOM.pdf";
         link.click();
 
-        let mailText = "Bon dia,\n\nNotícies destacades:\n\n";
-        mesa.forEach(i => mailText += `• ${i.titular}\n  ${i.link}\n\n`);
-        const box = document.getElementById('email-box');
-        box.innerText = mailText + "Equip OCOM";
-        box.style.display = 'block';
+        let txt = "Bon dia,\n\nNotícies destacades:\n\n";
+        mesa.forEach(i => txt += `• ${i.titular}\n  ${i.link}\n\n`);
+        document.getElementById('email-box').innerText = txt;
+        document.getElementById('email-box').style.display = 'block';
     }
 </script>
 </body>
