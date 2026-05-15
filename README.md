@@ -1,0 +1,3 @@
+# ClippApp
+
+Descripción del proyecto.
