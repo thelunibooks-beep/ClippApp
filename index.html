@@ -3,45 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recull de premsa V3.2 - Mossos RPCT</title>
+    <title>Recull de premsa V3.5 - Mossos RPCT</title>
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <style>
-        :root { --primary: #003366; --accent: #c60c30; --bg: #f4f7f9; }
+        :root { --primary: #003366; --bg: #f4f7f9; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #333; }
         .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-        header { text-align: center; border-bottom: 3px solid var(--primary); margin-bottom: 25px; padding-bottom: 10px; position: relative; }
-        .version-badge { position: absolute; right: 0; top: 0; font-size: 10px; background: #eee; padding: 2px 8px; border-radius: 4px; color: #666; }
+        header { text-align: center; border-bottom: 3px solid var(--primary); margin-bottom: 25px; position: relative; padding-bottom: 10px; }
+        .version { position: absolute; right: 0; top: 0; font-size: 10px; color: #999; background: #eee; padding: 2px 6px; border-radius: 4px; }
         h1 { color: var(--primary); margin: 0; font-size: 22px; }
         .panels { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
         .panel { border: 1px solid #e1e4e8; padding: 15px; border-radius: 10px; background: #fff; }
         h3 { margin-top: 0; color: var(--primary); font-size: 13px; text-transform: uppercase; }
-        #drop-zone { border: 2px dashed #cbd5e0; padding: 30px 10px; text-align: center; border-radius: 10px; cursor: pointer; background: #f8fafc; color: #64748b; font-size: 14px; }
+        #drop-zone { border: 2px dashed #cbd5e0; padding: 30px; text-align: center; border-radius: 10px; cursor: pointer; background: #f8fafc; color: #64748b; }
         #drop-zone:hover { border-color: var(--primary); background: #f0f4f8; }
-        input[type="text"] { width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; box-sizing: border-box; }
-        .loading { display: none; text-align: center; padding: 15px; background: #fff3cd; color: #856404; border-radius: 8px; margin-bottom: 15px; font-weight: bold; font-size: 14px; }
+        .loading { display: none; text-align: center; padding: 15px; background: #fff3cd; color: #856404; border-radius: 8px; margin-bottom: 15px; font-weight: bold; }
         .item { display: flex; align-items: center; background: #fff; border: 1px solid #edf2f7; padding: 10px; margin-bottom: 8px; border-radius: 8px; gap: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-        .tag { font-size: 9px; font-weight: bold; color: white; padding: 3px 6px; border-radius: 4px; min-width: 50px; text-align: center; text-transform: uppercase; }
-        .tag-digital { background: #28a745; }
-        .tag-pdf { background: #007bff; }
+        .tag { font-size: 9px; font-weight: bold; color: white; padding: 3px 6px; border-radius: 4px; min-width: 50px; text-align: center; background: #007bff; }
         .editable-title { flex-grow: 1; border: none; background: transparent; font-size: 14px; outline: none; color: #2d3748; }
         .btn-del { border: none; background: none; cursor: pointer; color: #e53e3e; font-size: 16px; font-weight: bold; }
         .btn-final { background: var(--primary); color: white; width: 100%; padding: 15px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin-top: 15px; }
-        #email-box { margin-top: 20px; padding: 15px; background: #2d3748; color: #edf2f7; border-radius: 8px; font-family: monospace; display: none; white-space: pre-wrap; font-size: 13px; line-height: 1.4; }
+        #email-box { margin-top: 20px; padding: 15px; background: #2d3748; color: #edf2f7; border-radius: 8px; font-family: monospace; display: none; white-space: pre-wrap; font-size: 13px; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <header>
-        <span class="version-badge">v3.2</span>
+        <span class="version">v3.5</span>
         <h1>SISTEMA DE PREMSA - RPCT</h1>
     </header>
 
     <div class="panels">
         <div class="panel">
             <h3>🌐 DIGITALS</h3>
-            <input type="text" id="url-input" placeholder="Enganxa URL i prem Enter" onkeypress="if(event.key==='Enter') afegirDigital()">
+            <input type="text" id="url-input" placeholder="Enganxa URL i prem Enter" onkeypress="if(event.key==='Enter') afegirDigital()" style="width:100%; padding:10px; box-sizing:border-box; border:1px solid #ccc; border-radius:5px;">
         </div>
         <div class="panel">
             <h3>📰 PAPER (PDF)</h3>
@@ -59,17 +56,16 @@
 </div>
 
 <script>
-    // URL DEL TEU GOOGLE APPS SCRIPT V2
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzkvI3VKMYUv6vdzkqxPaWexqXn9u6wbN1iLkarZzdJtOV0jrB7F3BADWln4XasdvVB/exec";
+    // URL ACTUALITZADA A LA TEVA ÚLTIMA IMPLEMENTACIÓ
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwLMOkZSdmVEQjBvpskBNzIXDp4Z2a9wCDZpuiEvz4H9pcmqI7lv8bO67hQo40raUKe/exec";
     
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
     let mesa = [];
 
     function afegirDigital() {
         const input = document.getElementById('url-input');
-        const url = input.value.trim();
-        if (!url) return;
-        mesa.push({ tipus: 'DIGITAL', titular: "Notícia Digital", link: url, fitxer: null });
+        if (!input.value) return;
+        mesa.push({ tipus: 'DIGITAL', titular: "Notícia Digital (Edita el titular)", link: input.value, fitxer: null });
         input.value = "";
         renderMesa();
     }
@@ -79,11 +75,9 @@
         for (let f of files) {
             try {
                 const titulares = await extraerConIA(f);
-                titulares.forEach(t => {
-                    mesa.push({ tipus: 'PAPER', titular: t, link: '(Adjunt)', fitxer: f });
-                });
+                titulares.forEach(t => mesa.push({ tipus: 'PAPER', titular: t, link: '(PDF)', fitxer: f }));
             } catch (e) {
-                mesa.push({ tipus: 'PAPER', titular: "Revisar titular: " + f.name, link: '(Adjunt)', fitxer: f });
+                mesa.push({ tipus: 'PAPER', titular: "Clica per escriure el titular manualment", link: '(PDF)', fitxer: f });
             }
         }
         document.getElementById('status').style.display = 'none';
@@ -110,7 +104,8 @@
         });
 
         const json = await response.json();
-        return json.success ? json.data : ["Edita el titular manualment"];
+        // Si el script de Google funciona correctamente, aquí recibimos el array de titulares
+        return json.success ? json.data : ["Revisa el titular manualment"];
     }
 
     function renderMesa() {
@@ -120,7 +115,7 @@
             const row = document.createElement('div');
             row.className = 'item';
             row.innerHTML = `
-                <span class="tag ${item.tipus === 'DIGITAL' ? 'tag-digital' : 'tag-pdf'}">${item.tipus}</span>
+                <span class="tag" style="background:${item.tipus==='DIGITAL'?'#28a745':'#007bff'}">${item.tipus}</span>
                 <input type="text" class="editable-title" value="${item.titular}" onchange="mesa[${idx}].titular = this.value">
                 <button class="btn-del" onclick="mesa.splice(${idx},1); renderMesa()">✕</button>
             `;
@@ -132,28 +127,24 @@
         const { PDFDocument } = PDFLib;
         const finalPdf = await PDFDocument.create();
         
-        // Portada del clipping
-        const cover = finalPdf.addPage([600, 800]);
-        cover.drawText('RECULL DE PREMSA RPCT', { x: 50, y: 730, size: 20 });
-        
-        const fitxersProcessats = new Set();
-        for (let item of mesa) {
-            if (item.tipus === 'PAPER' && item.fitxer && !fitxersProcessats.has(item.fitxer.name)) {
-                fitxersProcessats.add(item.fitxer.name);
-                const donor = await PDFDocument.load(await item.fitxer.arrayBuffer());
-                const pages = await finalPdf.copyPages(donor, donor.getPageIndices());
-                pages.forEach(p => finalPdf.addPage(p));
-            }
+        // Unimos los archivos PDF originales (las 6 páginas de cada uno)
+        const fitxersUnics = [...new Set(mesa.filter(i => i.fitxer).map(i => i.fitxer))];
+
+        for (let f of fitxersUnics) {
+            const donor = await PDFDocument.load(await f.arrayBuffer());
+            const pages = await finalPdf.copyPages(donor, donor.getPageIndices());
+            pages.forEach(p => finalPdf.addPage(p));
         }
 
         const pdfBytes = await finalPdf.save();
         const link = document.createElement('a');
         link.href = URL.createObjectURL(new Blob([pdfBytes], { type: 'application/pdf' }));
-        link.download = `Recull_OCOM.pdf`;
+        link.download = `Recull_OCOM_RPCT.pdf`;
         link.click();
 
-        let mail = "Bon dia,\n\nRecull de premsa:\n\n";
-        mesa.forEach(i => mail += `• ${i.titular}\n  ${i.link}\n\n`);
+        // Generar el resumen para copiar al correo
+        let mail = "Bon dia,\n\nUs adjuntem el recull de premsa d'avui:\n\n";
+        mesa.forEach(i => mail += `• ${i.titular.toUpperCase()}\n`);
         const box = document.getElementById('email-box');
         box.innerText = mail;
         box.style.display = 'block';
